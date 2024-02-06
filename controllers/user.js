@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
-const { validateUser } = require("../services/validator");
+const validate = require("../services/validator");
 const jwt = require("../services/jwt");
 const fs = require("fs");
 const path = require("path");
@@ -9,7 +9,7 @@ const register = async (req, res) => {
   try {
     let body = req.body;
 
-    validateUser(body);
+    validate.user(body);
 
     body.email = body.email.toLowerCase();
 
@@ -180,13 +180,10 @@ const list = async (req, res) => {
 };
 
 const update = async (req, res) => {
-  let userId = req.user.id;
+  let userId = req.params.id || req.user.id;
   let body = { ...req.body };
 
-  delete body.iat;
-  delete body.exp;
-  delete body.role;
-  delete body.image;
+
 
   try {
     const existingUser = await User.findOne({
@@ -207,7 +204,7 @@ const update = async (req, res) => {
       delete body.password;
     }
 
-    const updatedUser = await User.findByIdAndUpdate({ _id: userId }, body, {
+    const updatedUser = await User.findByIdAndUpdate(userId, body, {
       new: true,
       select: "-password -__v",
     });

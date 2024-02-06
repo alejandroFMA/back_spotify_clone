@@ -1,6 +1,6 @@
 const validator = require("validator");
 
-const validateUser = (parameters) => {
+const user = (parameters) => {
     let errors = [];
   
     if (!validator.isEmpty(parameters.name) &&
@@ -45,8 +45,22 @@ const validateUser = (parameters) => {
     console.log("Validation passed successfully");
   };
   
+const artist = (parameters) => {
+
+  }
+
+const album = (parameters) => {
+    
+  }
+
+const song = (parameters) => {
+    
+  }
   
   module.exports = {
-    validateUser
+    user,
+    artist,
+    song,
+    album
   };
   
