@@ -37,6 +37,7 @@ const register = async (req, res) => {
     await newUser.save();
 
     newUser.password = undefined;
+    newUser.role = undefined;
 
     return res.status(201).json({
       status: "success",
@@ -140,7 +141,6 @@ const profile = async (req, res) => {
   }
 };
 
-
 const list = async (req, res) => {
   let page = parseInt(req.params.page, 10) || 1;
   let itemsPerPage = 5;
@@ -182,7 +182,6 @@ const list = async (req, res) => {
 const update = async (req, res) => {
   let userId = req.params.id || req.user.id;
   let body = { ...req.body };
-
 
 
   try {

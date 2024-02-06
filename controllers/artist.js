@@ -1,12 +1,12 @@
-const Artist = require("../models/Publication");
+const Artist = require("../models/Artist");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
-const validate = require("../services/validation");
+const validate = require("../services/validator");
 
 const prueba = (req, res) => {
   return res.status(200).json({
-    message: "user controller",
+    message: "artist controller",
   });
 };
 
@@ -16,10 +16,38 @@ const createArtist = async (req, res) => {
   try {
     validate.artist(parameters);
 
+    if (!req.file) {
+      return res.status(404).json({
+        status: "Error",
+        message: "No image file provided.",
+      });
+    }
+
+    let nameFile = req.file.originalname;
+    let fileSplit = nameFile.split(".");
+    let fileExtension = fileSplit[1].toLowerCase();
+
+    if (!["png", "jpg", "jpeg"].includes(fileExtension)) {
+      await fs.promises.unlink(req.file.path);
+      return res.status(400).json({
+        status: "Error",
+        message: "Invalid file extension.",
+      });
+    }
+
+    let existingArtist = await Artist.findOne({name: parameters.name});
+
+    if(existingArtist){
+      return res.status(400).json({
+        status:"error",
+        message: "Artist already exist"
+      })
+    }
+
     const newArtist = new Artist({
       name: parameters.name,
       description: parameters.description,
-      image: req.file.path || "default.png",
+      image: req.file.filename, 
     });
 
     await newArtist.save();
@@ -31,7 +59,7 @@ const createArtist = async (req, res) => {
     });
   } catch (error) {
     console.error("Error:", error);
-    return res.status(400).json({
+    return res.status(500).json({
       status: "error",
       message: error.message,
     });
@@ -73,7 +101,18 @@ const getArtistById = async (req, res) => {
 
 const getAllArtist = async (req, res) => {
   try {
-    let result = await Artist.find({});
+
+    
+    let page = parseInt(req.query.page, 10) || 1;
+    let itemsPerPage = 5;
+
+    const options = {
+      page,
+      limit: itemsPerPage,
+      select:"-__v -created_at"
+    };
+
+    let result = await Artist.paginate({}, options);
 
     if (result.length == 0) {
       return res.status(404).json({
@@ -84,8 +123,13 @@ const getAllArtist = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      result,
+      page,
+      itemsPerPage,
+      total: result.totalDocs,
+      totalPages: result.totalPages,
+      artists: result.docs
     });
+
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({
@@ -189,7 +233,7 @@ const uploadFile = async (req, res) => {
   //recoger fichero de imagen
   const artistId = req.params.id;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
+  if (!mongoose.Types.ObjectId.isValid(artistId)) {
     return res.status(400).json({
       status: "error",
       message: "Invalid ID format",
@@ -203,7 +247,7 @@ const uploadFile = async (req, res) => {
     });
   }
 
-  if (!req.file && !req.files) {
+  if (!req.file) {
     return res.status(404).json({
       status: "Error",
       message: "Peticion invalida",
@@ -221,18 +265,18 @@ const uploadFile = async (req, res) => {
       fileExtension != "jpeg"
     ) {
       await fs.promises.unlink(req.file.path);
-      return res.status(400).json({
+      return res.status(200).json({
         status: "Error",
-        message: "Invalid file extension.",
+        message: "Invalid file extension. Image deleted",
       });
     }
     let artistToUpdate = await Artist.findOneAndUpdate(
       { _id: artistId }, // Filtro para asegurar que la publicación pertenezca al usuario.
-      { file: req.file.filename }, // Actualización para añadir/modificar el archivo de la publicación.
+      { image: req.file.filename }, // Actualización para añadir/modificar el archivo de la publicación.
       { new: true } // Opciones para devolver el documento modificado.
     );
 
-    if (!publicationToUpdate) {
+    if (!artistToUpdate) {
       return res.status(404).json({
         status: "error",
         message: "Publication not found or permission denied.",
@@ -242,7 +286,7 @@ const uploadFile = async (req, res) => {
     return res.status(200).json({
       status: "success",
       artist: artistToUpdate,
-      file: req.file,
+      image: req.file,
     });
   } catch (error) {
     console.error("Error:", error);

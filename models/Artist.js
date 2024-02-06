@@ -27,4 +27,4 @@ const ArtistSchema = Schema({
 
 ArtistSchema.plugin(mongoosePaginate)
 
-module.exports = model("Artist", UserSchema, "artists")
+module.exports = model("Artist", ArtistSchema, "artists")
