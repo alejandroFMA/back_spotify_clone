@@ -9,7 +9,7 @@ const SongSchema = Schema({
   },
   
   track: {
-    type: String,
+    type: Number,
     required: true,
   },
 
@@ -25,7 +25,8 @@ const SongSchema = Schema({
 
   file: {
     type: String,
-  required: true
+  required: true,
+  default: "default.mp3"
   },
 
   created_at: {

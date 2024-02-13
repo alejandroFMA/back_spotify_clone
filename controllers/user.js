@@ -190,7 +190,7 @@ const update = async (req, res) => {
       _id: { $ne: userId },
     });
 
-    if (existingUser) {
+    if (existingUser && existingUser.id != userId ) {
       return res.status(400).json({
         status: "error",
         message: "Email or nick already exists",

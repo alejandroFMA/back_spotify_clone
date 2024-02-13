@@ -135,7 +135,7 @@ const getAlbumArtist = async (req, res) => {
   
     try {
   
-      let result = await Album.find({artist:artistId});
+      let result = await Album.find({artist:artistId}).populate("artist");
   
       if (result.length == 0) {
           return res.status(404).json({
@@ -179,7 +179,7 @@ const deleteAlbum = async (req, res) => {
       });
     }
 
-    let albumToDelete = await Album.findOneAndDelete({ _id: id });
+    let albumToDelete = await Album.findById(id);
 
     if (!albumToDelete) {
       return res.status(404).json({
@@ -187,6 +187,9 @@ const deleteAlbum = async (req, res) => {
         message: "Album not found",
       });
     }
+
+    await Song.deleteMany({ album: id });
+    await Album.findByIdAndDelete(id)
 
     return res.status(200).json({
       status: "success",

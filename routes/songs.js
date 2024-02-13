@@ -20,7 +20,7 @@ const uploads=multer({storage});
 router.get("/prueba", songControllers.prueba);
 router.get("/all", songControllers.getAllSong);
 router.get("/:id", songControllers.getSongById);
-router.get("album/:id", songControllers.getSongsAlbum)
+router.get("/album/:id", songControllers.getSongsAlbum)
 router.post("/create/:id",[auth, uploads.single("file0")], songControllers.createSong);
 router.post("/upload/:id", [auth, uploads.single("file0")], songControllers.uploadFile);
 router.get("/media/:file", songControllers.getMedia)

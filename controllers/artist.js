@@ -1,4 +1,6 @@
 const Artist = require("../models/Artist");
+const Album = require("../models/Album");
+const Song = require("../models/Song");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
@@ -157,7 +159,7 @@ const deleteArtist = async (req, res) => {
       });
     }
 
-    let artistToDelete = await Artist.findOneAndDelete({ _id: id });
+    let artistToDelete = await Artist.findById(id);
 
     if (!artistToDelete) {
       return res.status(404).json({
@@ -166,9 +168,17 @@ const deleteArtist = async (req, res) => {
       });
     }
 
+    let albumsToDelete = await Album.find({artist:id})
+    const albumIds = albumsToDelete.map(album => album._id);
+
+    await Album.deleteMany({ artist: id });
+    await Song.deleteMany({ album: { $in: albumIds } });
+
+    await Artist.findByIdAndDelete(id);
+
     return res.status(200).json({
       status: "success",
-      message: "Artist removed succesfully",
+      message: "Artist removed succesfully"
     });
   } catch (error) {
     console.error("Error:", error);

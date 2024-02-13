@@ -78,7 +78,7 @@ const getSongById = async (req, res) => {
       });
     }
 
-    let result = await Song.findById(id);
+    let result = await Song.findById(id).populate("album");
 
     if (result) {
       return res.status(200).json({
@@ -142,7 +142,15 @@ const getSongsAlbum = async (req, res) => {
 
   try {
 
-    let result = await Song.find({album:albumId});
+    let result = await Song.find({album:albumId})
+   .populate({
+      path: 'album', 
+      populate: {
+        path: 'artist', 
+        model: 'Artist' 
+    }
+  })
+  .sort("track");
 
     if (result.length == 0) {
         return res.status(404).json({
